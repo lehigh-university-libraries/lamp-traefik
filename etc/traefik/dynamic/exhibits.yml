@@ -1,0 +1,20 @@
+{{- if eq (env "APP") "exhibits" }}
+http:
+  routers:
+    exhibits-http:
+      entryPoints: [web]
+      rule: 'Host(`exhibits.lib.lehigh.edu`)'
+      service: noop@internal
+      middlewares: [redirect-https]
+    exhibits:
+      entryPoints: [websecure]
+      rule: 'Host(`exhibits.lib.lehigh.edu`)'
+      tls: {}
+      service: exhibits
+      middlewares: [rate-limit, captcha-protect]
+  services:
+    exhibits:
+      loadBalancer:
+        servers:
+          - url: 'http://127.0.0.1:{{ env "APACHE_PORT" }}'
+{{- end }}

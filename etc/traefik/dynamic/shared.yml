@@ -1,0 +1,58 @@
+http:
+  middlewares:
+    redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    rate-limit:
+      rateLimit:
+        average: 20
+        period: 1s
+        burst: 200
+    captcha-protect:
+      plugin:
+        captcha-protect:
+          window: 864000
+          mode: regex
+          protectRoutes: ^/
+{{- if eq (env "APP") "veridian" }}
+          excludeRoutes:
+            - \/oai\/request
+            - \/node\/\d+\/manifest
+          goodBots:
+            - apple.com
+            - archive.org
+            - commoncrawl.org
+            - duckduckgo.com
+            - iframely.com
+            - facebook.com
+            - instagram.com
+            - kagibot.org
+            - linkedin.com
+            - msn.com
+            - openalex.org
+            - twitter.com
+            - x.com
+{{- end }}
+          protectParameters: "true"
+          exemptIps:
+            - 128.180.0.0/16
+            - 4.59.138.56/29
+            - 162.223.16.248/29
+            - 208.220.178.48/28
+            - 209.66.120.16/28
+          challengeTmpl: /etc/traefik/challenge.tmpl.html
+          challengeURL: ""
+          challengeStatusCode: 429
+          captchaProvider: turnstile
+          siteKey: '{{ env "TURNSTILE_SITE_KEY" }}'
+          secretKey: '{{ env "TURNSTILE_SECRET_KEY" }}'
+          persistentStateFile: /var/log/traefik/state.json
+          periodSeconds: 30
+          failureThreshold: 3
+          enableGooglebotIPCheck: "true"
+          enableUptimeRobotBypass: "true"
+tls:
+  certificates:
+    - certFile: '{{ env "TLS_CERT" }}'
+      keyFile: '{{ env "TLS_KEY" }}'

@@ -1,0 +1,16 @@
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+experimental:
+  localPlugins:
+    captcha-protect:
+      moduleName: github.com/libops/captcha-protect
+log:
+  level: INFO
+accessLog: {}

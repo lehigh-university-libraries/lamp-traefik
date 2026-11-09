@@ -1,0 +1,27 @@
+{{- if eq (env "APP") "veridian" }}
+http:
+  routers:
+    veridian3-redirect-http:
+      rule: Host(`veridian3.lib.lehigh.edu`)
+      entryPoints:
+        - web
+      middlewares:
+        - veridian3-redirect
+      service: noop@internal
+
+    veridian3-redirect-https:
+      rule: Host(`veridian3.lib.lehigh.edu`)
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - veridian3-redirect
+      service: noop@internal
+
+  middlewares:
+    veridian3-redirect:
+      redirectRegex:
+        regex: '^https?://veridian3\.lib\.lehigh\.edu/(.*)'
+        replacement: 'https://bwarchive.lib.lehigh.edu/$1'
+        permanent: true
+{{- end }}

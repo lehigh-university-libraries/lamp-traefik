@@ -1,0 +1,20 @@
+{{- if eq (env "APP") "scalar" }}
+http:
+  routers:
+    scalar-http:
+      entryPoints: [web]
+      rule: 'Host(`scalar.lehigh.edu`)'
+      service: noop@internal
+      middlewares: [redirect-https]
+    scalar:
+      entryPoints: [websecure]
+      rule: 'Host(`scalar.lehigh.edu`)'
+      tls: {}
+      service: scalar
+      middlewares: [rate-limit, captcha-protect]
+  services:
+    scalar:
+      loadBalancer:
+        servers:
+          - url: 'http://127.0.0.1:{{ env "APACHE_PORT" }}'
+{{- end }}

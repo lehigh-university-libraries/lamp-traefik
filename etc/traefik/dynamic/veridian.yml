@@ -1,0 +1,20 @@
+{{- if eq (env "APP") "veridian" }}
+http:
+  routers:
+    veridian-http:
+      entryPoints: [web]
+      rule: 'Host(`bwarchive.lib.lehigh.edu`)'
+      service: noop@internal
+      middlewares: [redirect-https]
+    veridian:
+      entryPoints: [websecure]
+      rule: 'Host(`bwarchive.lib.lehigh.edu`)'
+      tls: {}
+      service: veridian
+      middlewares: [rate-limit, captcha-protect]
+  services:
+    veridian:
+      loadBalancer:
+        servers:
+          - url: 'http://127.0.0.1:{{ env "APACHE_PORT" }}'
+{{- end }}

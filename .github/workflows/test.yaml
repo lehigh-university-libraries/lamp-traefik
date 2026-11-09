@@ -1,0 +1,58 @@
+name: Proxy smoke test
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Test production proxy configuration
+        run: |
+          python3 veridian/ci/smoke.py
+          python3 scalar/ci/smoke.py scalar
+          python3 scalar/ci/smoke.py omeka-s
+          python3 scalar/ci/smoke.py exhibits
+
+  install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install, reapply and update the real systemd service
+        run: bash ci/install-test.sh
+
+  apache:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container: debian:trixie-slim
+    steps:
+      - name: Install Apache
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends apache2 git ca-certificates
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate Apache configuration
+        run: |
+          cp veridian/etc/apache2/ports.conf /etc/apache2/ports.conf
+          cp veridian/etc/apache2/sites-available/veridian.conf /etc/apache2/sites-available/veridian.conf
+          a2dissite 000-default
+          a2enmod cgid rewrite remoteip
+          a2ensite veridian
+          apache2ctl configtest
+          cp scalar/etc/apache2/sites-available/scalar.conf /etc/apache2/sites-available/scalar.conf
+          a2dissite veridian
+          a2ensite scalar
+          apache2ctl configtest

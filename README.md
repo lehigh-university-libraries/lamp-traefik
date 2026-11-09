@@ -1,0 +1,9 @@
+# lamp-traefik
+
+One Traefik configuration and deployment procedure for the Scalar, Veridian, and Omeka SET LAMP VMs. Each VM runs its own Traefik, connects to its local Apache over loopback, and selects its site with `APP`: `scalar` for scalar.lehigh.edu, `omeka-s` for omeka-s.lehigh.edu, `exhibits` for exhibits.lib.lehigh.edu, or `veridian` for bwarchive.lib.lehigh.edu. Every VM receives all application routing configuration and the same CAPTCHA and rate-limit middleware. Docker applications configure Traefik in their own Compose projects.
+
+See [DEPLOY.md](DEPLOY.md) for installation, configuration, validation, and rollback. The [Scalar notes](scalar/README.md) use its current Apache virtual host; the [Veridian notes](veridian/README.md) cover its existing deployment and application-specific redirects and exemptions. The example uses existing certificates; it does not issue or renew them.
+
+The shared middleware challenges requests with Cloudflare Turnstile and rate limits clients. Veridian retains its existing bot allowlist and route exemptions. Each VM has its own CAPTCHA state; moving to a centralized service later would require planning backend TLS, high availability, and plugin state.
+
+CI installs and re-deploys the systemd service on an isolated runner, checks hostname selection and state preservation, and runs the shared configuration against disposable Scalar, Omeka, and Veridian backends, and checks the Veridian Apache example. Run `python3 scalar/ci/smoke.py scalar`, `python3 scalar/ci/smoke.py omeka-s`, `python3 scalar/ci/smoke.py exhibits`, and `python3 veridian/ci/smoke.py` on Linux amd64 with Python, Git, OpenSSL, internet access, IPv6 loopback, and ports 8080, 18080, and 18443 available. These checks do not complete a real browser CAPTCHA or validate production configuration.
